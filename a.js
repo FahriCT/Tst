@@ -1,38 +1,36 @@
-const { Configuration, OpenAIApi } = require("openai");
+const { OpenAI } = require("openai");
 const readline = require("readline");
 const dotenv = require("dotenv");
 
-// Konfigurasi dotenv untuk mengambil API key
+// Configure dotenv to load the API key from environment variables
 dotenv.config();
 
-// Konfigurasi OpenAI dengan Base URL khusus
-const configuration = new Configuration({
-    apiKey: process.env.SECRET_KEY,
-    basePath: "https://api.fastgpt.in/api/v1/chat/completions" // Ganti dengan Base URL FastGPT atau URL lain
+// Initialize OpenAI client with the latest API
+const openai = new OpenAI({
+    apiKey: fastgpt-roqzMQYrDmf5v5hqTY6kPFSPSIttVDzAHNAFLpJqrZXmlA3PkCXUobIyYu, // Use your OpenAI API key
+    basePath: "https://api.fastgpt.in/api/v1/chat/completions", // Default API path for OpenAI
 });
 
-const openai = new OpenAIApi(configuration);
-
-// Penyimpanan percakapan per sesi
+// Store conversations per session
 const conversations = {};
 
-// Setup readline untuk input/output di terminal
+// Setup readline interface for input/output in terminal
 const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
 });
 
-// Fungsi untuk bertanya dan mendapatkan respon
+// Function to ask a question and get a response
 async function askQuestion(query) {
     return new Promise(resolve => rl.question(query, resolve));
 }
 
-// Fungsi untuk berinteraksi dengan FastGPT API
+// Function to interact with GPT-4 using OpenAI SDK v4.x.x
 async function interactWithGPT() {
-    const session_id = "session1"; // Misalnya session ID yang tetap
+    const session_id = "session1"; // Use a fixed session ID for simplicity
     if (!conversations[session_id]) {
         conversations[session_id] = [
-            { role: "system", content: "You are a helpful assistant. Use Markdown for formatting." }
+            { role: "system", content: "You are a helpful assistant." }
         ];
     }
 
@@ -47,22 +45,22 @@ async function interactWithGPT() {
         conversations[session_id].push({ role: "user", content: message });
 
         try {
-            const response = await openai.createChatCompletion({
-                model: "gpt-4o-mini", // Sesuaikan model dengan FastGPT
-                messages: conversations[session_id],
-                stream: false // Non-streaming (untuk komunikasi biasa)
+            // Call OpenAI API to get the response
+            const response = await openai.chat.completions.create({
+                model: "gpt-4", // Replace with the desired model
+                messages: conversations[session_id], // Pass the current conversation context
             });
 
-            const assistantResponse = response.data.choices[0].message.content;
+            const assistantResponse = response.choices[0].message.content;
             console.log("FastGPT: ", assistantResponse);
 
-            // Menyimpan respon percakapan
+            // Store the assistant's response in the conversation
             conversations[session_id].push({ role: "assistant", content: assistantResponse });
         } catch (error) {
-            console.error("Error: ", error.response ? error.response.data : error.message);
+            console.error("Error: ", error.message);
         }
     }
 }
 
-// Menjalankan interaksi GPT
+// Start the interaction with GPT
 interactWithGPT();
